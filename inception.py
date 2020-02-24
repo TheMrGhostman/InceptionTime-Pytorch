@@ -29,43 +29,48 @@ class Inception(nn.Module):
 
 		if use_bottleneck and in_channels > 1:
 			self.bottleneck = nn.Conv1d(
-										in_channels=in_channels, 
-										out_channels=bottleneck_channels, 
-										kernel_size=1, 
-										stride=1, 
-										bias=False) 
+								in_channels=in_channels, 
+								out_channels=bottleneck_channels, 
+								kernel_size=1, 
+								stride=1, 
+								bias=False
+								)
 		else:
 			self.bottleneck = pass_through
 
 		self.conv_from_bottleneck_1 = nn.Conv1d(
-												in_channels=bottleneck_channels, 
-												out_channels=n_filters, 
-												kernel_size=kernel_sizes[0], 
-												stride=1, 
-												padding=kernel_sizes[0]//2, 
-												bias=False)
+										in_channels=bottleneck_channels, 
+										out_channels=n_filters, 
+										kernel_size=kernel_sizes[0], 
+										stride=1, 
+										padding=kernel_sizes[0]//2, 
+										bias=False
+										)
 		self.conv_from_bottleneck_2 = nn.Conv1d(
-												in_channels=bottleneck_channels, 
-												out_channels=n_filters, 
-												kernel_size=kernel_sizes[1], 
-												stride=1, 
-												padding=kernel_sizes[1]//2, 
-												bias=False)
+										in_channels=bottleneck_channels, 
+										out_channels=n_filters, 
+										kernel_size=kernel_sizes[1], 
+										stride=1, 
+										padding=kernel_sizes[1]//2, 
+										bias=False
+										)
 		self.conv_from_bottleneck_3 = nn.Conv1d(
-												in_channels=bottleneck_channels, 
-												out_channels=n_filters, 
-												kernel_size=kernel_sizes[2], 
-												stride=1, 
-												padding=kernel_sizes[2]//2, 
-												bias=False)
+										in_channels=bottleneck_channels, 
+										out_channels=n_filters, 
+										kernel_size=kernel_sizes[2], 
+										stride=1, 
+										padding=kernel_sizes[2]//2, 
+										bias=False
+										)
 		self.max_pool = nn.MaxPool1d(kernel_size=3, stride=1, padding=1)
 		self.conv_from_maxpool = nn.Conv1d(
-											in_channels=in_channels, 
-											out_channels=n_filters, 
-											kernel_size=1, 
-											stride=1,
-											padding=0, 
-											bias=False)
+									in_channels=in_channels, 
+									out_channels=n_filters, 
+									kernel_size=1, 
+									stride=1,
+									padding=0, 
+									bias=False
+									)
 		self.batch_norm = nn.BatchNorm1d(num_features=4*n_filters)
 		self.activation = activation
 

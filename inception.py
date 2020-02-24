@@ -12,7 +12,7 @@ def pass_through(X):
 
 
 class Inception(nn.Module):
-	def __init__(self, in_channels, n_filters, kernel_sizes=[9, 19, 39], bottleneck_channels=1, use_bottleneck=True, activation=nn.ReLU()):
+	def __init__(self, in_channels, n_filters, kernel_sizes=[9, 19, 39], bottleneck_channels=32, activation=nn.ReLU()):
 		"""
 		: param in_channels				Number of input channels (input features)
 		: param n_filters				Number of filters per convolution layer => out_channels = 4*n_filters
@@ -22,12 +22,11 @@ class Inception(nn.Module):
 										For correction of kernel_sizes use function "correct_sizes". 
 		: param bottleneck_channels		Number of output channels in bottleneck. 
 										Bottleneck wont be used if nuber of in_channels is equal to 1.
-		: param use_bottleneck			Boolean variable. Use bottleneck or not.
 		: param activation				Activation function for output tensor (nn.ReLU()). 
 		"""
 		super(Inception, self).__init__()
 
-		if use_bottleneck and in_channels > 1:
+		if in_channels > 1:
 			self.bottleneck = nn.Conv1d(
 								in_channels=in_channels, 
 								out_channels=bottleneck_channels, 
@@ -83,10 +82,57 @@ class Inception(nn.Module):
 		Z2 = self.conv_from_bottleneck_2(Z_bottleneck)
 		Z3 = self.conv_from_bottleneck_3(Z_bottleneck)
 		Z4 = self.conv_from_maxpool(Z_maxpool)
-		print(Z1.shape, Z2.shape, Z3.shape, Z4.shape)
 		# step 3 
 		Z = torch.cat([Z1, Z2, Z3, Z4], axis=1)
 		Z = self.activation(self.batch_norm(Z))
 		return Z
 
 
+class InceptionBlock(nn.Module):
+	def __init__(self, in_channels, n_filters=32, kernel_sizes=[9,19,39], bottleneck_channels=32, use_residual=True, activation=nn.ReLU()):
+		super(InceptionBlock, self).__init__()
+		self.use_residual = use_residual
+		self.activation = activation
+		self.inception_1 = Inception(
+							in_channels=in_channels,
+							n_filters=n_filters,
+							kernel_sizes=kernel_sizes,
+							bottleneck_channels=bottleneck_channels,
+							activation=activation
+							)
+		self.inception_2 = Inception(
+							in_channels=4*n_filters,
+							n_filters=n_filters,
+							kernel_sizes=kernel_sizes,
+							bottleneck_channels=bottleneck_channels,
+							activation=activation
+							)
+		self.inception_3 = Inception(
+							in_channels=4*n_filters,
+							n_filters=n_filters,
+							kernel_sizes=kernel_sizes,
+							bottleneck_channels=bottleneck_channels,
+							activation=activation
+							)	
+		if self.use_residual:
+			self.residual = nn.Sequential(
+								nn.Conv1d(
+									in_channels=in_channels, 
+									out_channels=4*n_filters, 
+									kernel_size=1,
+									stride=1,
+									padding=0
+									),
+								nn.BatchNorm1d(
+									num_features=4*n_filters
+									)
+								)
+
+	def forward(self, X):
+		Z = self.inception_1(X)
+		Z = self.inception_2(Z)
+		Z = self.inception_3(Z)
+		if self.use_residual:
+			Z = Z + self.residual(X)
+			Z = self.activation(Z)
+		return Z

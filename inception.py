@@ -37,6 +37,7 @@ class Inception(nn.Module):
 								)
 		else:
 			self.bottleneck = pass_through
+			bottleneck_channels = 1
 
 		self.conv_from_bottleneck_1 = nn.Conv1d(
 										in_channels=bottleneck_channels, 
@@ -224,6 +225,8 @@ class InceptionTranspose(nn.Module):
 			Z = torch.cat([Z1, Z2, Z3], axis=1)
 			MUP = self.max_unpool(Z4, indices)
 			BN = self.bottleneck(Z)
+			# another possibility insted of sum BN and MUP is adding 2nd bottleneck transposed convolution
+			
 			return self.activation(self.batch_norm(BN + MUP))
 
 
